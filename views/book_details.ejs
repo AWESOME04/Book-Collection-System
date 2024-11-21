@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=book.name%></title>
+   
+
+</head>
+<body>
+    <h1>Details</h1>
+    <h2>
+
+        <%= book.name %>
+    </h2>
+    <p>
+        <%= book.price %>
+    </p>
+    <p>
+        <%= book.category %>
+    </p>
+        <a href="/books">
+            Back to book list
+        </a>
+        <form method="POST" action="/books/<%=book.id%>/?_method=DELETE" >
+            <button type="submit">Delete Book</button>
+        </form>
+</body>
+</html>
