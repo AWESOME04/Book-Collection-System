@@ -1,31 +1,31 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
+let pool;
 
-// Test the connection
-pool.connect((err, client, release) => {
-    if (err) {
-        console.error('Error connecting to the database:', err.stack);
-    } else {
-        console.log('Connected to PostgreSQL database');
-        release();
+const getPool = () => {
+    if (!pool) {
+        pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: {
+                rejectUnauthorized: false
+            },
+            max: 1,
+            connectionTimeoutMillis: 5000
+        });
     }
-});
+    return pool;
+};
 
 const initializeDatabase = async () => {
+    const client = await getPool().connect();
     try {
         // Test the connection
-        await pool.query('SELECT NOW()');
+        await client.query('SELECT NOW()');
         console.log('Database connected successfully');
 
         // Create genres table if it doesn't exist
-        await pool.query(`
+        await client.query(`
             CREATE TABLE IF NOT EXISTS genres (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) NOT NULL UNIQUE,
@@ -35,7 +35,7 @@ const initializeDatabase = async () => {
         `);
 
         // Create books table if it doesn't exist
-        await pool.query(`
+        await client.query(`
             CREATE TABLE IF NOT EXISTS books (
                 id SERIAL PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
@@ -51,7 +51,13 @@ const initializeDatabase = async () => {
     } catch (err) {
         console.error('Database initialization error:', err);
         throw err;
+    } finally {
+        client.release();
     }
 };
 
-module.exports = { pool, initializeDatabase };
+module.exports = { 
+    pool: getPool(), 
+    initializeDatabase,
+    query: (text, params) => getPool().query(text, params)
+};

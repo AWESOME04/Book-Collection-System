@@ -5,10 +5,11 @@ const { initializeDatabase } = require('./config/database');
 
 const app = express();
 
-// Initialize database
+// Initialize database without blocking server start
 initializeDatabase().catch(err => {
     console.error('Failed to initialize database:', err);
-    process.exit(1);
+    // Don't exit process in serverless environment
+    // process.exit(1);
 });
 
 // Middleware
@@ -32,18 +33,28 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Error:', err);
     res.status(500).render('error', {
-        message: err.message,
+        message: err.message || 'Something went wrong!',
         error: process.env.NODE_ENV === 'development' ? err : {}
     });
 });
 
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-    console.log('Press Ctrl+C to quit.');
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
 });
 
+// Start server
+const PORT = process.env.PORT || 3000;
+
+// In development, we can listen to a port
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+        console.log('Press Ctrl+C to quit.');
+    });
+}
+
+// For serverless environment
 module.exports = app;

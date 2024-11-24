@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/database');
+const db = require('../config/database');
 
 // GET all books
 router.get('/', async (req, res) => {
@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
             params.push(req.query.genre);
         }
 
-        const { rows: books } = await pool.query(query, params);
-        const { rows: genres } = await pool.query('SELECT * FROM genres ORDER BY name');
+        const { rows: books } = await db.query(query, params);
+        const { rows: genres } = await db.query('SELECT * FROM genres ORDER BY name');
 
         console.log('Found books:', books.length);
         console.log('Found genres:', genres.length);
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
 // GET new book form
 router.get('/new', async (req, res) => {
     try {
-        const { rows: genres } = await pool.query('SELECT * FROM genres ORDER BY name');
+        const { rows: genres } = await db.query('SELECT * FROM genres ORDER BY name');
         console.log('Loading add book form with genres:', genres.map(g => g.name));
         res.render('add_book', { genres });
     } catch (err) {
@@ -48,7 +48,7 @@ router.post('/', async (req, res) => {
         const { title, author, price, genre_id, copies_left } = req.body;
         console.log('Received book data:', req.body);
 
-        const { rows } = await pool.query(
+        const { rows } = await db.query(
             'INSERT INTO books (title, author, price, genre_id, copies_left) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [title, author, price, genre_id, copies_left || 1]
         );
@@ -56,7 +56,7 @@ router.post('/', async (req, res) => {
         res.redirect('/books');
     } catch (err) {
         console.error('Error creating book:', err);
-        const { rows: genres } = await pool.query('SELECT * FROM genres ORDER BY name');
+        const { rows: genres } = await db.query('SELECT * FROM genres ORDER BY name');
         res.render('add_book', { 
             genres,
             error: err.message,
@@ -68,7 +68,7 @@ router.post('/', async (req, res) => {
 // GET book details
 router.get('/:id', async (req, res) => {
     try {
-        const { rows } = await pool.query(
+        const { rows } = await db.query(
             `SELECT b.*, g.name as genre_name 
              FROM books b 
              LEFT JOIN genres g ON b.genre_id = g.id 
@@ -92,7 +92,7 @@ router.get('/:id', async (req, res) => {
 // GET edit book form
 router.get('/:id/edit', async (req, res) => {
     try {
-        const { rows: [book] } = await pool.query(
+        const { rows: [book] } = await db.query(
             `SELECT b.*, g.name as genre_name 
              FROM books b 
              LEFT JOIN genres g ON b.genre_id = g.id 
@@ -104,7 +104,7 @@ router.get('/:id/edit', async (req, res) => {
             return res.status(404).render('error', { message: 'Book not found' });
         }
 
-        const { rows: genres } = await pool.query('SELECT * FROM genres ORDER BY name');
+        const { rows: genres } = await db.query('SELECT * FROM genres ORDER BY name');
         res.render('edit_book', { book, genres });
     } catch (err) {
         console.error('Error loading edit book form:', err);
@@ -116,7 +116,7 @@ router.get('/:id/edit', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { title, author, price, genre_id, copies_left } = req.body;
-        const { rows } = await pool.query(
+        const { rows } = await db.query(
             `UPDATE books 
              SET title = $1, author = $2, price = $3, genre_id = $4, copies_left = $5 
              WHERE id = $6 
@@ -131,8 +131,8 @@ router.put('/:id', async (req, res) => {
         res.redirect(`/books/${req.params.id}`);
     } catch (err) {
         console.error('Error updating book:', err);
-        const { rows: genres } = await pool.query('SELECT * FROM genres ORDER BY name');
-        const { rows: [book] } = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
+        const { rows: genres } = await db.query('SELECT * FROM genres ORDER BY name');
+        const { rows: [book] } = await db.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
         res.render('edit_book', {
             book: { ...book, ...req.body },
             genres,
@@ -144,7 +144,7 @@ router.put('/:id', async (req, res) => {
 // DELETE book
 router.delete('/:id', async (req, res) => {
     try {
-        const { rows } = await pool.query('DELETE FROM books WHERE id = $1 RETURNING *', [req.params.id]);
+        const { rows } = await db.query('DELETE FROM books WHERE id = $1 RETURNING *', [req.params.id]);
         
         if (rows.length === 0) {
             return res.status(404).render('error', { message: 'Book not found' });
