@@ -1,24 +1,31 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 
-let pool;
-
-const getPool = () => {
-    if (!pool) {
-        pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: {
-                rejectUnauthorized: false
-            },
-            max: 1,
-            connectionTimeoutMillis: 5000
-        });
-    }
-    return pool;
+const poolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    },
+    max: 1
 };
 
+// For debugging connection issues
+console.log('Database URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+console.log('Pool Config:', { ...poolConfig, connectionString: 'HIDDEN' });
+
+const pool = new Pool(poolConfig);
+
+pool.on('error', (err) => {
+    console.error('Unexpected error on idle client', err);
+    process.exit(-1);
+});
+
+pool.on('connect', () => {
+    console.log('Connected to PostgreSQL database');
+});
+
 const initializeDatabase = async () => {
-    const client = await getPool().connect();
+    const client = await pool.connect();
     try {
         // Test the connection
         await client.query('SELECT NOW()');
@@ -56,8 +63,11 @@ const initializeDatabase = async () => {
     }
 };
 
-module.exports = { 
-    pool: getPool(), 
-    initializeDatabase,
-    query: (text, params) => getPool().query(text, params)
+module.exports = {
+    query: (text, params) => {
+        console.log('Executing query:', text);
+        return pool.query(text, params);
+    },
+    pool,
+    initializeDatabase
 };
