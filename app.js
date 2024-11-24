@@ -1,9 +1,15 @@
 const express = require('express');
 const path = require('path');
 const methodOverride = require('method-override');
-const connectDB = require('./config/database');
+const { initializeDatabase } = require('./config/database');
 
 const app = express();
+
+// Initialize database
+initializeDatabase().catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+});
 
 // Middleware
 app.use(express.json());
@@ -27,25 +33,17 @@ app.get('/', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).json({
-        success: false,
-        error: 'Something went wrong!'
+    res.status(500).render('error', {
+        message: err.message,
+        error: process.env.NODE_ENV === 'development' ? err : {}
     });
 });
 
-// Only start the server if this file is run directly
-if (require.main === module) {
-    const PORT = process.env.PORT || 3000;
-    connectDB(process.env.MONGODB_URI || 'mongodb://localhost:27017/bookstore')
-        .then(() => {
-            app.listen(PORT, () => {
-                console.log(`Server is running on port ${PORT}`);
-            });
-        })
-        .catch(err => {
-            console.error('Failed to connect to MongoDB:', err);
-            process.exit(1);
-        });
-}
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log('Press Ctrl+C to quit.');
+});
 
 module.exports = app;
