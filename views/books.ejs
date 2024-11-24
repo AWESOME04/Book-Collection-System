@@ -7,21 +7,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <header class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Book Collection</h1>
-            <div class="flex justify-between items-center">
-                <a href="/books/new" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">📚 Book Collection</h1>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <a href="/books/new" class="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors text-center">
                     <i class="fas fa-plus mr-2"></i>Add New Book
                 </a>
                 <!-- Genre Filter -->
-                <div class="relative">
-                    <select id="genreFilter" class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 leading-tight focus:outline-none focus:border-blue-500">
+                <div class="relative w-full sm:w-64">
+                    <select id="genreFilter" class="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 leading-tight focus:outline-none focus:border-blue-500 shadow-sm">
                         <option value="">All Genres</option>
                         <% genres.forEach(genre => { %>
-                            <option value="<%= genre._id %>"><%= genre.name %></option>
+                            <option value="<%= genre.id %>"><%= genre.name %></option>
                         <% }) %>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
@@ -33,59 +33,68 @@
 
         <!-- Book Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <% books.forEach(book => { %>
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6">
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2">
-                        <a href="/books/<%= book._id %>" class="hover:text-blue-600 transition-colors">
-                            <%= book.name %>
-                        </a>
-                    </h2>
-                    <p class="text-gray-600 mb-2">By <%= book.author %></p>
-                    <p class="text-green-600 font-semibold mb-4">$<%= book.price.toFixed(2) %></p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-500">
-                            <i class="fas fa-book mr-1"></i>
-                            <%= book.copies_left %> copies left
-                        </span>
-                        <div class="space-x-2">
-                            <a href="/books/<%= book._id %>/edit" class="text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-edit"></i>
+            <% if (books.length === 0) { %>
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-books text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-500 text-lg">No books found. Add some books to your collection!</p>
+                </div>
+            <% } else { %>
+                <% books.forEach(book => { %>
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 p-6">
+                        <h2 class="text-xl font-semibold text-gray-800 mb-2">
+                            <a href="/books/<%= book.id %>" class="hover:text-blue-600 transition-colors">
+                                <%= book.title %>
                             </a>
-                            <button onclick="deleteBook('<%= book._id %>')" class="text-red-600 hover:text-red-800">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                        </h2>
+                        <p class="text-gray-600 mb-2"><i class="fas fa-user mr-2"></i><%= book.author %></p>
+                        <p class="text-green-600 font-semibold mb-2">$<%= Number(book.price).toFixed(2) %></p>
+                        <p class="text-sm text-gray-500 mb-4">
+                            <i class="fas fa-bookmark mr-2"></i><%= book.genre_name %>
+                        </p>
+                        <div class="flex justify-between items-center pt-4 border-t">
+                            <span class="text-sm text-gray-500">
+                                <i class="fas fa-book mr-1"></i> <%= book.copies_left %> copies
+                            </span>
+                            <div class="flex gap-2">
+                                <a href="/books/<%= book.id %>/edit" class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="deleteBook('<%= book.id %>')" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            <% }) %>
+                <% }) %>
+            <% } %>
         </div>
     </div>
 
     <script>
-        // Delete book function
-        async function deleteBook(id) {
-            if (confirm('Are you sure you want to delete this book?')) {
-                try {
-                    const response = await fetch(`/books/${id}`, {
-                        method: 'DELETE'
-                    });
-                    if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert('Failed to delete book');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
+    // Genre filter functionality
+    document.getElementById('genreFilter').addEventListener('change', function() {
+        const genre = this.value;
+        window.location.href = genre ? `/books?genre=${genre}` : '/books';
+    });
+
+    // Delete book functionality
+    async function deleteBook(id) {
+        if (confirm('Are you sure you want to delete this book?')) {
+            try {
+                const response = await fetch(`/books/${id}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
                     alert('Failed to delete book');
                 }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Failed to delete book');
             }
         }
-
-        // Genre filter function
-        document.getElementById('genreFilter').addEventListener('change', function() {
-            const genreId = this.value;
-            window.location.href = genreId ? `/books?genre=${genreId}` : '/books';
-        });
+    }
     </script>
 </body>
 </html>

@@ -3,23 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Add New Book - Book Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
-<body>
-    <!-- // name:{
-        // price:{
-        // author:{
-        // genre:{
-        // stock:{ -->
-    
-    <form action="/books" method="POST">
-        <input type="text" placeholder="enter book name" name="name">
-        <input type="number" placeholder="enter price" name="price">
-        <input type="text" placeholder="enter genre" name="genre">
-        <input type="text" placeholder="enter author" name="author">
-        <input type="number" placeholder="enter current stock" name="stock">
-<button type="submit">submit</button>
-    </form>
-    
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Header -->
+            <header class="mb-8">
+                <div class="flex items-center gap-4 mb-6">
+                    <a href="/books" class="text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-800">Add New Book</h1>
+                </div>
+            </header>
+
+            <!-- Form -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <form action="/books" method="POST" class="space-y-6">
+                    <!-- Title -->
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
+                            Book Title <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="title" name="title" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter book title">
+                    </div>
+
+                    <!-- Author -->
+                    <div>
+                        <label for="author" class="block text-sm font-medium text-gray-700 mb-1">
+                            Author <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="author" name="author" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter author name">
+                    </div>
+
+                    <!-- Genre -->
+                    <div>
+                        <label for="genre_id" class="block text-sm font-medium text-gray-700 mb-1">
+                            Genre <span class="text-red-500">*</span>
+                        </label>
+                        <select id="genre_id" name="genre_id" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select a genre</option>
+                            <% genres.forEach(genre => { %>
+                                <option value="<%= genre.id %>"><%= genre.name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <!-- Price -->
+                    <div>
+                        <label for="price" class="block text-sm font-medium text-gray-700 mb-1">
+                            Price <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">$</span>
+                            <input type="number" id="price" name="price" required step="0.01" min="0"
+                                class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- Copies -->
+                    <div>
+                        <label for="copies_left" class="block text-sm font-medium text-gray-700 mb-1">
+                            Number of Copies <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" id="copies_left" name="copies_left" required min="0"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="1" value="1">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit"
+                            class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                            Add Book
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
