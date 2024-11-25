@@ -147,13 +147,34 @@ router.delete('/:id', async (req, res) => {
         const { rows } = await db.query('DELETE FROM books WHERE id = $1 RETURNING *', [req.params.id]);
         
         if (rows.length === 0) {
-            return res.status(404).render('error', { message: 'Book not found' });
+            const error = { message: 'Book not found' };
+            return req.accepts('json') 
+                ? res.status(404).json(error)
+                : res.status(404).render('error', error);
         }
 
-        res.redirect('/books');
+        // Return different responses based on what the client accepts
+        if (req.accepts('json')) {
+            res.json({ 
+                success: true, 
+                message: 'Book deleted successfully',
+                id: req.params.id 
+            });
+        } else {
+            res.redirect('/books');
+        }
     } catch (err) {
         console.error('Error deleting book:', err);
-        res.status(500).render('error', { message: err.message });
+        const error = { 
+            message: 'Error deleting book',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        };
+        
+        if (req.accepts('json')) {
+            res.status(500).json(error);
+        } else {
+            res.status(500).render('error', error);
+        }
     }
 });
 

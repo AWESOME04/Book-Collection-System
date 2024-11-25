@@ -6,12 +6,12 @@ const { initializeDatabase } = require('./config/database');
 const app = express();
 
 // Debug environment
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('Current working directory:', process.cwd());
-console.log('Environment variables:', {
-    DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
-    PORT: process.env.PORT
-});
+// console.log('NODE_ENV:', process.env.NODE_ENV);
+// console.log('Current working directory:', process.cwd());
+// console.log('Environment variables:', {
+//     DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
+//     PORT: process.env.PORT
+// });
 
 // Initialize database without blocking server start
 initializeDatabase()

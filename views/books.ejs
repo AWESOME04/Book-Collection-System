@@ -40,7 +40,7 @@
                 </div>
             <% } else { %>
                 <% books.forEach(book => { %>
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 p-6">
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-all transform hover:-translate-y-1 p-6" data-book-id="<%= book.id %>">
                         <h2 class="text-xl font-semibold text-gray-800 mb-2">
                             <a href="/books/<%= book.id %>" class="hover:text-blue-600 transition-colors">
                                 <%= book.title %>
@@ -82,16 +82,30 @@
         if (confirm('Are you sure you want to delete this book?')) {
             try {
                 const response = await fetch(`/books/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
                 });
+                
+                const result = await response.json();
+                
                 if (response.ok) {
-                    window.location.reload();
+                    // Remove the book element from the DOM
+                    const bookElement = document.querySelector(`div[data-book-id="${id}"]`);
+                    if (bookElement) {
+                        bookElement.remove();
+                    }
                 } else {
-                    alert('Failed to delete book');
+                    alert(result.message || 'Failed to delete book');
                 }
             } catch (err) {
                 console.error('Error:', err);
-                alert('Failed to delete book');
+                // Don't show error if the book was actually deleted
+                const bookElement = document.querySelector(`div[data-book-id="${id}"]`);
+                if (bookElement) {
+                    alert('Failed to delete book');
+                }
             }
         }
     }
