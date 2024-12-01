@@ -9,11 +9,28 @@ router.get('/', async (req, res) => {
             SELECT b.*, g.name as genre_name 
             FROM books b 
             LEFT JOIN genres g ON b.genre_id = g.id
+            WHERE 1=1
         `;
         const params = [];
+        let paramCount = 1;
 
+        // Add title search
+        if (req.query.title) {
+            query += ` AND b.title ILIKE $${paramCount}`;
+            params.push(`%${req.query.title}%`);
+            paramCount++;
+        }
+
+        // Add author search
+        if (req.query.author) {
+            query += ` AND b.author ILIKE $${paramCount}`;
+            params.push(`%${req.query.author}%`);
+            paramCount++;
+        }
+
+        // Add genre filter
         if (req.query.genre) {
-            query += ' WHERE g.id = $1';
+            query += ` AND g.id = $${paramCount}`;
             params.push(req.query.genre);
         }
 
@@ -23,7 +40,13 @@ router.get('/', async (req, res) => {
         console.log('Found books:', books.length);
         console.log('Found genres:', genres.length);
         
-        res.render('books', { books, genres });
+        res.render('books', { 
+            books, 
+            genres,
+            searchTitle: req.query.title || '',
+            searchAuthor: req.query.author || '',
+            searchGenre: req.query.genre || ''
+        });
     } catch (err) {
         console.error('Error in /books route:', err);
         res.status(500).json({ error: err.message });
